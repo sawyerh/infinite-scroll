@@ -3,7 +3,7 @@
    Infinite Scroll
    --------------------------------
    + https://github.com/paulirish/infinite-scroll
-   + version 2.0b2.120519
+   + version 2.0b2.120520
    + Copyright 2011/12 Paul Irish & Luke Shumard
    + Licensed under the MIT license
 
@@ -60,13 +60,14 @@
         errorCallback: function () { },
         infid: 0, //Instance ID
         pixelsFromNavToBottom: undefined,
-        path: undefined
+        path: undefined,
+        extraParamsCallback: function () { return {} }
     };
 
 
     $.infinitescroll.prototype = {
 
-        /*	
+        /*
             ----------------------------
             Private methods
             ----------------------------
@@ -203,7 +204,7 @@
             } else if (path.match(/^(.*?)\b2\b(.*?$)/)) {
                 path = path.match(/^(.*?)\b2\b(.*?$)/).slice(1);
 
-                // if there is any 2 in the url at all.    
+                // if there is any 2 in the url at all.
             } else if (path.match(/^(.*?)2(.*?$)/)) {
 
                 // page= is used in django:
@@ -430,7 +431,7 @@
                 $(this).parent().fadeOut('normal');
             });
 
-            // user provided callback when done    
+            // user provided callback when done
             opts.errorCallback.call($(opts.contentSelector)[0],'done');
 
         },
@@ -449,7 +450,7 @@
 
         },
 
-        /*	
+        /*
             ----------------------------
             Public methods
             ----------------------------
@@ -498,6 +499,23 @@
                 box = $(opts.contentSelector).is('table') ? $('<tbody/>') : $('<div/>');
 
                 desturl = path.join(opts.state.currPage);
+                          // add any extra path parameters specified in initialization
+
+            //adding extra parameters to querystring if ? in string then add an & else add ?
+            var nextSeparator = "?";
+            if (desturl.match(/\?/)) {
+              nextSeparator = "&";
+            }
+            extraParams = opts.extraParamsCallback();
+            for (var key in extraParams) {
+              if (!!extraParams[key]) {
+                desturl += nextSeparator + key + "=" + extraParams[key];
+                nextSeparator = "&";
+              }
+            }
+
+
+                instance._debug('desturl', desturl);
 
                 method = (opts.dataType == 'html' || opts.dataType == 'json' ) ? opts.dataType : 'html+callback';
                 if (opts.appendCallback && opts.dataType == 'html') method += '+callback'
@@ -507,7 +525,7 @@
                         case 'html+callback':
 
                             instance._debug('Using HTML via .load() method');
-                        box.load(desturl + ' ' + opts.itemSelector, null, function infscr_ajax_callback(responseText) {
+                        box.load(desturl + ' ' + opts.itemSelector, function infscr_ajax_callback(responseText) {
                             instance._loadcallback(box, responseText);
                         });
 
@@ -535,7 +553,7 @@
                             success: function(data, textStatus, jqXHR) {
                                 condition = (typeof (jqXHR.isResolved) !== 'undefined') ? (jqXHR.isResolved()) : (textStatus === "success" || textStatus === "notmodified");
                                 if(opts.appendCallback) {
-                                    // if appendCallback is true, you must defined template in options. 
+                                    // if appendCallback is true, you must defined template in options.
                                     // note that data passed into _loadcallback is already an html (after processed in opts.template(data)).
                                     if(opts.template != undefined) {
                                         var theData = opts.template(data);
@@ -620,7 +638,7 @@
     }
 
 
-    /*	
+    /*
         ----------------------------
         Infinite Scroll function
         ----------------------------
@@ -634,7 +652,7 @@
         - https://github.com/jsor/jcarousel/blob/master/lib/jquery.jcarousel.js
 
         Masonry
-        - https://github.com/desandro/masonry/blob/master/jquery.masonry.js		
+        - https://github.com/desandro/masonry/blob/master/jquery.masonry.js
 
 */
 
@@ -645,7 +663,7 @@
 
         switch (thisCall) {
 
-            // method 
+            // method
             case 'string':
 
                 var args = Array.prototype.slice.call(arguments, 1);
@@ -671,7 +689,7 @@
 
             break;
 
-            // creation 
+            // creation
             case 'object':
 
                 this.each(function () {
@@ -707,7 +725,7 @@
 
 
 
-    /* 
+    /*
      * smartscroll: debounced scroll event for jQuery *
      * https://github.com/lukeshumard/smartscroll
      * Based on smartresize by @louis_remi: https://github.com/lrbabe/jquery.smartresize.js *
